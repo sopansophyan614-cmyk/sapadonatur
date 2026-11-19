@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SapaDonatur" />
+  <meta name="theme-color" content="#F2F2F7" />
+  <title>SapaDonatur CRM</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --bg: #F2F2F7;
+      --card: #FFFFFF;
+      --card-secondary: #F9F9FB;
+      --text: #1C1C1E;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #8E8E93;
+      --separator: rgba(60, 60, 67, 0.12);
+      --primary: #059669;
+      --primary-soft: rgba(5, 150, 105, 0.12);
+      --blue: #007AFF;
+      --blue-soft: rgba(0, 122, 255, 0.12);
+      --orange: #FF9500;
+      --orange-soft: rgba(255, 149, 0, 0.14);
+      --red: #FF3B30;
+      --red-soft: rgba(255, 59, 48, 0.12);
+      --wa: #25D366;
+      --wa-dark: #128C7E;
+      --glass: rgba(242, 242, 247, 0.85);
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 14px rgba(0, 0, 0, 0.03);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: linear-gradient(180deg, #ECFDF5 0%, #F2F2F7 48%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .login-screen.hidden { display: none; }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      border-radius: 24px;
+      padding: 26px 22px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .login-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #10B981, #047857);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 26px;
+      margin: 0 auto 12px;
+      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.28);
+    }
+
+    .ios-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding: calc(var(--safe-top) + 12px) 16px 12px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .header-row {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .header-title-wrap { display: flex; align-items: center; gap: 10px; }
+
+    .app-mini-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: linear-gradient(180deg, #10B981, #047857);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    }
+
+    .header-title { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; margin: 0; }
+    .header-subtitle { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+
+    .sync-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--card);
+      border: 0.5px solid var(--separator);
+      color: var(--text-secondary);
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+    .dot.cloud { background: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+    .main-container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 16px calc(92px + var(--safe-bottom));
+    }
+
+    .offline-alert {
+      display: none;
+      background: var(--red-soft);
+      border: 1px solid rgba(255, 59, 48, 0.3);
+      color: #B91C1C;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .offline-alert.show { display: block; }
+
+    .tab-view { display: none; animation: fadeSlide 0.2s ease-out; }
+    .tab-view.active { display: block; }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .install-banner {
+      display: none;
+      background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%);
+      border: 1px solid rgba(5, 150, 105, 0.22);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .install-banner.show { display: flex; }
+
+    .ios-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 14px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-tertiary);
+      margin: 16px 4px 8px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 680px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .kpi-card {
+      background: var(--card);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .kpi-badge { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .kpi-value { font-size: 24px; font-weight: 700; letter-spacing: -0.6px; color: var(--text); }
+    .kpi-sub { font-size: 12px; color: var(--text-tertiary); }
+
+    .progress-track { height: 10px; background: #E5E5EA; border-radius: 999px; overflow: hidden; margin: 10px 0 6px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #10B981, #059669); border-radius: 999px; transition: width 0.35s ease; }
+
+    .seg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+    .seg-row:last-child { margin-bottom: 0; }
+    .seg-bar-wrap { flex: 1; height: 8px; background: #E5E5EA; border-radius: 999px; overflow: hidden; }
+    .seg-bar { height: 100%; border-radius: 999px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+      font-family: inherit;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-wa { background: var(--wa); color: #fff; }
+    .btn-soft { background: var(--bg); color: var(--text); }
+    .btn-soft-blue { background: var(--blue-soft); color: var(--blue); }
+    .btn-soft-red { background: var(--red-soft); color: var(--red); }
+    .btn-sm { padding: 6px 10px; font-size: 12.5px; border-radius: 10px; }
+    .btn-full { width: 100%; }
+
+    .segmented {
+      display: flex;
+      background: rgba(118, 118, 128, 0.12);
+      padding: 3px;
+      border-radius: 11px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+    .seg-btn {
+      flex: 1;
+      white-space: nowrap;
+      border: none;
+      background: transparent;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: inherit;
+    }
+    .seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .search-box { flex: 1; min-width: 180px; position: relative; }
+
+    .search-input, .ios-input, .ios-select, .ios-textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--separator);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .search-input { padding-left: 34px; background: rgba(118, 118, 128, 0.1); border-color: transparent; }
+    .search-input:focus, .ios-input:focus, .ios-select:focus, .ios-textarea:focus { border-color: var(--primary); background: var(--card); }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .badge-orange { background: var(--orange-soft); color: #C25E00; }
+    .badge-green { background: var(--primary-soft); color: #047857; }
+    .badge-blue { background: var(--blue-soft); color: #0055B3; }
+    .badge-gray { background: rgba(142, 142, 147, 0.15); color: var(--text-secondary); }
+
+    .inline-select {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      max-width: 165px;
+    }
+    .inline-select.is-paid { background: var(--primary-soft); color: #047857; }
+    .inline-select.is-unpaid { background: var(--orange-soft); color: #C25E00; }
+    .inline-select.is-wa { background: var(--blue-soft); color: #0055B3; }
+    .inline-select.is-nowa { background: rgba(142, 142, 147, 0.15); color: var(--text-secondary); }
+    .inline-select.is-resp { background: #F2F2F7; color: var(--text); border-color: var(--separator); }
+
+    .donor-name-link {
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s ease;
+    }
+    .donor-name-link:hover { color: var(--wa-dark); text-decoration: underline; }
+
+    .table-wrap {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 920px; font-size: 13.5px; }
+    th {
+      text-align: left;
+      padding: 12px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-tertiary);
+      background: var(--card-secondary);
+      border-bottom: 1px solid var(--separator);
+      white-space: nowrap;
+    }
+    td { padding: 10px; border-bottom: 0.5px solid var(--separator); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0, 0, 0, 0.015); }
+
+    .donor-list { display: flex; flex-direction: column; gap: 10px; }
+    .donor-card {
+      background: var(--card);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .donor-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .donor-meta { font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .donor-inline-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; }
+    .donor-actions { display: flex; gap: 8px; padding-top: 8px; border-top: 0.5px solid var(--separator); }
+
+    .dropzone {
+      border: 2px dashed rgba(5, 150, 105, 0.35);
+      border-radius: var(--radius-lg);
+      background: rgba(5, 150, 105, 0.04);
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dropzone.dragover { border-color: var(--primary); background: rgba(5, 150, 105, 0.1); }
+
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: var(--glass);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-top: 0.5px solid var(--separator);
+      padding: 6px 4px calc(6px + var(--safe-bottom));
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .tab-item {
+      flex: 1;
+      max-width: 95px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 4px 0;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tab-item.active { color: var(--primary); }
+    .tab-item svg { width: 22px; height: 22px; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; animation: fadeIn 0.18s ease-out; }
+    @media (min-width: 640px) { .modal-backdrop { align-items: center; padding: 20px; } }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: 22px 22px 0 0;
+      padding: 14px 16px calc(20px + var(--safe-bottom));
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18);
+      animation: slideUp 0.22s ease-out;
+    }
+    @media (min-width: 640px) { .modal-sheet { border-radius: 22px; padding: 20px; } }
+
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .sheet-handle { width: 38px; height: 5px; border-radius: 999px; background: rgba(60, 60, 67, 0.25); margin: 0 auto 12px; }
+
+    .toast {
+      position: fixed;
+      top: calc(var(--safe-top) + 14px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      z-index: 120;
+      background: rgba(28, 28, 30, 0.92);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+      pointer-events: none;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+
+    .history-item {
+      background: var(--card);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 10px;
+    }
+    .history-msg {
+      background: #DCF8C6;
+      color: #1C1C1E;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      white-space: pre-line;
+      margin-top: 8px;
+    }
+    .empty-state { text-align: center; padding: 36px 16px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast">Tersimpan</div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">💚</div>
+      <h2 style="text-align:center;margin:0 0 4px;font-size:21px;">SapaDonatur CRM</h2>
+      <p style="text-align:center;margin:0 0 18px;font-size:13px;color:var(--text-secondary);">
+        Mode Online (Firebase Realtime) &bull; Pilih peran akun
+      </p>
+
+      <div class="segmented" id="loginRoleSeg">
+        <button type="button" class="seg-btn active" data-role="cs" onclick="selectLoginRole('cs')">CS (Customer Service)</button>
+        <button type="button" class="seg-btn" data-role="admin" onclick="selectLoginRole('admin')">Admin</button>
+      </div>
+
+      <div id="loginCsFields">
+        <div class="form-group">
+          <label class="form-label">Nama CS (sesuai kolom CS di CSV)</label>
+          <input type="text" id="loginCsNameInput" class="ios-input" list="csOptionsDatalist" placeholder="Contoh: 1_FAUZIAH" />
+          <datalist id="csOptionsDatalist"></datalist>
+          <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:4px;">
+            CS hanya dapat melihat dan mengelola data donatur miliknya sendiri.
+          </div>
+        </div>
+      </div>
+
+      <div id="loginAdminFields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">PIN Admin</label>
+          <input type="password" id="loginAdminPinInput" class="ios-input" placeholder="Masukkan PIN Admin (default: 123456)" />
+          <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:4px;">
+            Admin dapat melihat semua data CS dan kolom Nama CS.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" style="margin-top:6px;">Masuk ke Aplikasi</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="ios-header">
+    <div class="header-row">
+      <div class="header-title-wrap">
+        <img src="./icon-192.png" onerror="this.style.display='none'" alt="SapaDonatur" class="app-mini-icon" />
+        <div>
+          <h1 class="header-title" id="headerTitle">Dashboard</h1>
+          <div class="header-subtitle">
+            <span>Periode:</span>
+            <input type="month" id="targetMonthInput" style="border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:600;color:var(--primary);padding:0;cursor:pointer;" />
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="userBadgePill" class="badge badge-green" style="cursor:pointer;" onclick="logoutUser()" title="Ketuk untuk ganti akun">CS</span>
+        <button class="sync-pill" onclick="switchTab('settings')" title="Status Koneksi Online Firebase">
+          <span class="dot" id="syncDot"></span>
+          <span id="syncLabel">Menghubungkan...</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div id="offlineAlert" class="offline-alert">
+      Koneksi online ke Firebase terputus atau diblokir oleh Firestore Rules. Aplikasi ini berjalan 100% online—pastikan internet aktif dan Rules Firestore mengizinkan akses.
+    </div>
+
+    <div id="installBanner" class="install-banner">
+      <div style="font-size:13px;">
+        <strong style="display:block;color:var(--primary);">Pasang SapaDonatur di Layar Utama</strong>
+        <span id="installDesc" style="color:var(--text-secondary);font-size:12px;">Akses lebih cepat seperti aplikasi iPhone.</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button id="installActionBtn" class="btn btn-primary btn-sm">Pasang</button>
+        <button onclick="dismissInstallBanner()" class="btn btn-soft btn-sm">Tutup</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-view active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top"><span>Belum Donasi</span><span class="kpi-badge badge-orange">!</span></div>
+          <div class="kpi-value" id="kpiUnpaidCount">0</div>
+          <div class="kpi-sub" id="kpiUnpaidSub">Rp 0 historis</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><span>Sudah Donasi</span><span class="kpi-badge badge-green">✓</span></div>
+          <div class="kpi-value" id="kpiPaidCount">0</div>
+          <div class="kpi-sub" id="kpiPaidSub">Bulan ini</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><span>Sudah Di-WA</span><span class="kpi-badge badge-blue">WA</span></div>
+          <div class="kpi-value" id="kpiWaCount">0</div>
+          <div class="kpi-sub" id="kpiWaSub">Dari yg belum donasi</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-top"><span>Total Donatur</span><span class="kpi-badge badge-gray">#</span></div>
+          <div class="kpi-value" id="kpiTotalCount">0</div>
+          <div class="kpi-sub" id="kpiTotalAmount">Rp 0 akumulasi</div>
+        </div>
+      </div>
+
+      <div class="ios-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:15px;">Progres Follow-Up Bulan Ini</strong>
+          <span id="followupPercent" style="font-weight:700;color:var(--primary);">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="followupProgress" style="width:0%;"></div></div>
+        <div style="font-size:12.5px;color:var(--text-secondary);" id="followupSummaryText">
+          Memuat data online dari Firebase...
+        </div>
+      </div>
+
+      <div class="ios-card">
+        <strong style="font-size:15px;display:block;margin-bottom:12px;">Segmentasi Donatur Belum Donasi</strong>
+        <div class="seg-row">
+          <span style="width:130px;color:var(--text-secondary);">Utama (&ge; Rp 1 Jt)</span>
+          <div class="seg-bar-wrap"><div class="seg-bar" id="segBarHigh" style="width:0%;background:#059669;"></div></div>
+          <strong id="segCountHigh" style="width:32px;text-align:right;">0</strong>
+        </div>
+        <div class="seg-row">
+          <span style="width:130px;color:var(--text-secondary);">Menengah (300rb–999rb)</span>
+          <div class="seg-bar-wrap"><div class="seg-bar" id="segBarMid" style="width:0%;background:#007AFF;"></div></div>
+          <strong id="segCountMid" style="width:32px;text-align:right;">0</strong>
+        </div>
+        <div class="seg-row">
+          <span style="width:130px;color:var(--text-secondary);">Reguler (&lt; Rp 300rb)</span>
+          <div class="seg-bar-wrap"><div class="seg-bar" id="segBarLow" style="width:0%;background:#FF9500;"></div></div>
+          <strong id="segCountLow" style="width:32px;text-align:right;">0</strong>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn btn-primary" onclick="switchTab('donors')">Lihat Daftar Belum Donasi</button>
+        <button class="btn btn-soft-blue" onclick="switchTab('import')">Impor Data CSV</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: DONATUR -->
+    <section id="tab-donors" class="tab-view">
+      <div class="segmented" id="donorFilterSeg">
+        <button class="seg-btn active" data-filter="unpaid">Belum Donasi</button>
+        <button class="seg-btn" data-filter="pending_wa">Belum Di-WA</button>
+        <button class="seg-btn" data-filter="followed_up">Sudah Di-WA</button>
+        <button class="seg-btn" data-filter="paid">Sudah Donasi</button>
+        <button class="seg-btn" data-filter="all">Semua</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input type="search" id="searchInput" class="search-input" placeholder="Cari nama, WA, atau respon..." oninput="renderDonors()" />
+        </div>
+        <select id="adminCsFilter" class="ios-select" style="width:auto;min-width:135px;display:none;" onchange="renderDonors()">
+          <option value="all">Semua CS</option>
+        </select>
+        <select id="sortSelect" class="ios-select" style="width:auto;min-width:140px;" onchange="renderDonors()">
+          <option value="total_desc">Total Terbesar</option>
+          <option value="date_asc">Terlama Donasi</option>
+          <option value="date_desc">Terbaru Donasi</option>
+          <option value="name_asc">Nama A–Z</option>
+        </select>
+        <button class="btn btn-soft btn-sm" id="viewModeBtn" onclick="toggleViewMode()">Mode: Tabel</button>
+      </div>
+
+      <div id="donorsContainer"></div>
+    </section>
+
+    <!-- TAB 3: RIWAYAT PESAN -->
+    <section id="tab-history" class="tab-view">
+      <div class="toolbar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input type="search" id="historySearchInput" class="search-input" placeholder="Cari riwayat pesan..." oninput="renderHistoryTab()" />
+        </div>
+      </div>
+      <div id="historyListContainer"></div>
+    </section>
+
+    <!-- TAB 4: IMPOR CSV -->
+    <section id="tab-import" class="tab-view">
+      <div class="ios-card">
+        <strong style="font-size:16px;display:block;margin-bottom:4px;">Unggah File CSV Donatur ke Firebase</strong>
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 14px;">
+          Mendukung kolom: <code>CS</code>, <code>Nama</code>, <code>No WA</code>, <code>Total Donasi</code>, <code>Donasi terakhir</code> (DD/MM/YYYY atau YYYY-MM-DD).
+        </p>
+
+        <div id="dropzone" class="dropzone" onclick="document.getElementById('csvFileInput').click()">
+          <div style="font-size:28px;margin-bottom:6px;">📄</div>
+          <strong style="display:block;color:var(--primary);">Pilih File CSV dari Perangkat</strong>
+          <span style="font-size:12.5px;color:var(--text-secondary);">atau tarik &amp; lepas file .csv ke area ini</span>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleFileSelect(event)" />
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+          <button class="btn btn-soft-blue btn-sm" onclick="loadSampleData()">Muat Data Contoh</button>
+          <button class="btn btn-soft btn-sm" onclick="exportCSV()">Ekspor CSV Status &amp; Respon</button>
+        </div>
+      </div>
+
+      <div id="csvPreviewCard" class="ios-card" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="font-size:15px;">Pratinjau Data CSV (<span id="previewCount">0</span> baris)</strong>
+          <select id="importModeSelect" class="ios-select" style="width:auto;padding:6px 10px;font-size:12.5px;">
+            <option value="merge">Gabung &amp; Update (berdasarkan No WA)</option>
+            <option value="replace">Ganti Semua Data Online</option>
+          </select>
+        </div>
+        <div class="table-wrap" style="box-shadow:none;border:1px solid var(--separator);margin-bottom:12px;">
+          <table id="previewTable" style="min-width:540px;"></table>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-full" onclick="confirmImportCSV()">Unggah ke Firebase Online</button>
+          <button class="btn btn-soft" onclick="cancelImportCSV()">Batal</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PENGATURAN -->
+    <section id="tab-settings" class="tab-view">
+      <div class="section-label">Akun &amp; Keamanan</div>
+      <div class="ios-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+          <div>
+            <strong style="font-size:15px;" id="accountInfoTitle">Akun Aktif</strong>
+            <div style="font-size:12.5px;color:var(--text-secondary);" id="accountInfoSub">-</div>
+          </div>
+          <button class="btn btn-soft-red btn-sm" onclick="logoutUser()">Ganti Akun / Keluar</button>
+        </div>
+        <div id="adminPinSettingBox" style="display:none;padding-top:10px;border-top:0.5px solid var(--separator);">
+          <label class="form-label">Ubah PIN Admin (Tersimpan Online)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="newAdminPinInput" class="ios-input" placeholder="PIN baru (mis. 123456)" />
+            <button class="btn btn-blue btn-sm" onclick="saveAdminPin()">Simpan PIN</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Pilihan Respon Donatur (Online Realtime)</div>
+      <div class="ios-card">
+        <p style="font-size:12.5px;color:var(--text-secondary);margin:0 0 10px;">
+          Atur daftar pilihan status respon donatur yang muncul di tabel &amp; kartu.
+        </p>
+        <div id="responseOptionsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="newRespOptionInput" class="ios-input" placeholder="Tambah pilihan respon baru..." />
+          <button class="btn btn-blue btn-sm" onclick="addResponseOption()">Tambah</button>
+        </div>
+      </div>
+
+      <div class="section-label">Database Online (Firebase Firestore)</div>
+      <div class="ios-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <strong style="font-size:15px;">Project: fudonatur (100% Online)</strong>
+            <div style="font-size:12.5px;color:var(--text-secondary);" id="firebaseStatusText">Menghubungkan ke Firestore...</div>
+          </div>
+          <button class="btn btn-soft-blue btn-sm" onclick="syncFromFirebase(true)">Refresh Data</button>
+        </div>
+      </div>
+
+      <div class="section-label">Daftar Link File Lampiran (Tersimpan Online)</div>
+      <div class="ios-card">
+        <div id="fileLinksList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;">
+          <input type="text" id="newFileName" class="ios-input" placeholder="Nama file (mis. Laporan Nov)" />
+          <input type="url" id="newFileUrl" class="ios-input" placeholder="https://drive.google.com/..." />
+          <button class="btn btn-blue btn-sm" onclick="addFileLink()">Tambah</button>
+        </div>
+      </div>
+
+      <div class="section-label">Template Pesan WhatsApp (Tersimpan Online)</div>
+      <div class="ios-card">
+        <p style="font-size:12.5px;color:var(--text-secondary);margin:0 0 10px;">
+          Variabel: <code>{nama}</code>, <code>{total_donasi}</code>, <code>{terakhir_donasi}</code>, <code>{link_file}</code>
+        </p>
+        <div id="templatesList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+        <div class="form-group">
+          <label class="form-label">Judul Template Baru</label>
+          <input type="text" id="newTplTitle" class="ios-input" placeholder="Contoh: Sapaan Hangat Awal Bulan" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Isi Pesan</label>
+          <textarea id="newTplBody" class="ios-textarea" rows="3" placeholder="Assalamu'alaikum Bapak/Ibu {nama}..."></textarea>
+        </div>
+        <button class="btn btn-blue btn-sm" onclick="addTemplate()">Simpan Template</button>
+      </div>
+
+      <div class="section-label">Aplikasi</div>
+      <div class="ios-card" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;">
+        <div style="font-size:13px;color:var(--text-secondary);">Versi 1.3.0 (Online-Only) &bull; Auto-Update GitHub</div>
+        <button class="btn btn-soft btn-sm" onclick="checkForUpdates(true)">Cek Update</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tab-bar">
+    <button class="tab-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/>
+        <rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>
+      </svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="tab-item" data-tab="donors" onclick="switchTab('donors')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span>Donatur</span>
+    </button>
+    <button class="tab-item" data-tab="history" onclick="switchTab('history')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>Riwayat</span>
+    </button>
+    <button class="tab-item" data-tab="import" onclick="switchTab('import')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>Impor CSV</span>
+    </button>
+    <button class="tab-item" data-tab="settings" onclick="switchTab('settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span>Pengaturan</span>
+    </button>
+  </nav>
+
+  <!-- Modal Kirim WhatsApp -->
+  <div id="waModal" class="modal-backdrop" onclick="if(event.target===this) closeWaModal()">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <strong style="font-size:17px;" id="waModalName">Kirim WhatsApp</strong>
+          <div style="font-size:12.5px;color:var(--text-secondary);" id="waModalPhone">628...</div>
+        </div>
+        <button class="btn btn-soft btn-sm" onclick="closeWaModal()">Tutup</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pilih Template Pesan</label>
+        <select id="waTemplateSelect" class="ios-select" onchange="updateWaPreview()"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pilih Link File Lampiran (Google Drive / PDF)</label>
+        <select id="waFileSelect" class="ios-select" onchange="onWaFileChange()"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Atau Tempel Link File Custom</label>
+        <input type="url" id="waCustomLink" class="ios-input" placeholder="https://drive.google.com/..." oninput="updateWaPreview()" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pratinjau Pesan (Otomatis Tercatat ke Firebase)</label>
+        <textarea id="waMessageBox" class="ios-textarea" rows="5"></textarea>
+      </div>
+
+      <button class="btn btn-wa btn-full" onclick="sendWhatsAppNow()">
+        Buka WhatsApp &amp; Simpan ke Riwayat
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Riwayat Pesan Per Donatur -->
+  <div id="donorHistoryModal" class="modal-backdrop" onclick="if(event.target===this) closeDonorHistoryModal()">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <strong style="font-size:17px;" id="dhModalTitle">Riwayat Pesan</strong>
+          <div style="font-size:12.5px;color:var(--text-secondary);" id="dhModalSub"></div>
+        </div>
+        <button class="btn btn-soft btn-sm" onclick="closeDonorHistoryModal()">Tutup</button>
+      </div>
+      <div id="dhModalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEuneCYTEMr0wfyYpZ6jOe5onDF6V_ubM",
+      authDomain: "fudonatur.firebaseapp.com",
+      projectId: "fudonatur",
+      storageBucket: "fudonatur.firebasestorage.app",
+      messagingSenderId: "1055257329475",
+      appId: "1:1055257329475:web:f8d1c4076ab36715aaf9f6"
+    };
+
+    const DEFAULT_RESP_OPTIONS = [
+      'Belum Ada Respon',
+      'InsyaAllah Transfer',
+      'Sudah Transfer',
+      'Minta Dihubungi Nanti',
+      'Sedang Berhalangan',
+      'Nomor Tidak Aktif'
+    ];
+
+    const DEFAULT_TEMPLATES = [
+      {
+        id: 'tpl-1',
+        title: 'Sapaan Hangat & Laporan Program',
+        body: 'Assalamu\'alaikum Bapak/Ibu {nama},\n\nSemoga sehat selalu dan dimudahkan segala urusannya. Terima kasih atas kebaikan Bapak/Ibu selama ini (total amanah {total_donasi}, terakhir pada {terakhir_donasi}).\n\nIzin membagikan laporan penyaluran terbaru kami di sini:\n{link_file}\n\nJika berkenan melanjutkan kebaikan bulan ini, insyaAllah sangat berarti bagi para penerima manfaat.'
+      },
+      {
+        id: 'tpl-2',
+        title: 'Pengingat Halus Donatur Rutin',
+        body: 'Halo Bapak/Ibu {nama}, semoga selalu dalam lindungan-Nya. Izin menyapa dan menginformasikan program kebaikan bulan ini. Dokumen info program bisa dilihat di: {link_file}'
+      }
+    ];
+
+    const DEFAULT_FILES = [
+      {
+        id: 'file-1',
+        name: 'Laporan Penyaluran Bulan Lalu (PDF)',
+        url: 'https://drive.google.com/file/d/contoh-laporan/view'
+      }
+    ];
+
+    let state = {
+      donors: [],
+      history: [],
+      templates: [...DEFAULT_TEMPLATES],
+      files: [...DEFAULT_FILES],
+      responseOptions: [...DEFAULT_RESP_OPTIONS],
+      currentUser: null,
+      loginRole: 'cs',
+      adminPin: '123456',
+      filter: 'unpaid',
+      viewMode: 'table',
+      targetMonth: '',
+      pendingCsvRows: [],
+      activeDonorId: null,
+      db: null,
+      isOnlineConnected: false,
+      deferredPrompt: null
+    };
+
+    // ====== INIT (ONLINE ONLY) ======
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      state.targetMonth = sessionStorage.getItem('sd_month') || defaultMonth;
+      document.getElementById('targetMonthInput').value = state.targetMonth;
+      document.getElementById('targetMonthInput').addEventListener('change', (e) => {
+        state.targetMonth = e.target.value || defaultMonth;
+        sessionStorage.setItem('sd_month', state.targetMonth);
+        renderAll();
+      });
+
+      state.viewMode = sessionStorage.getItem('sd_view') || 'table';
+      updateViewModeBtn();
+
+      setupFilters();
+      setupDropzone();
+      initFirebase();
+      checkUserSession();
+      setupInstallPrompt();
+      registerServiceWorker();
+      renderAll();
+    });
+
+    // ====== LOGIN & ROLE ======
+    function selectLoginRole(role) {
+      state.loginRole = role;
+      document.querySelectorAll('#loginRoleSeg .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.role === role);
+      });
+      document.getElementById('loginCsFields').style.display = role === 'cs' ? 'block' : 'none';
+      document.getElementById('loginAdminFields').style.display = role === 'admin' ? 'block' : 'none';
+    }
+
+    function updateCsDatalist() {
+      const uniqueCs = Array.from(new Set(state.donors.map(d => (d.cs || '').trim()).filter(Boolean))).sort();
+      document.getElementById('csOptionsDatalist').innerHTML = uniqueCs.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+
+      const filterEl = document.getElementById('adminCsFilter');
+      const curVal = filterEl.value;
+      filterEl.innerHTML = `<option value="all">Semua CS</option>` +
+        uniqueCs.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      if (uniqueCs.includes(curVal)) filterEl.value = curVal;
+    }
+
+    function checkUserSession() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('sd_session') || 'null');
+        if (saved && saved.role) {
+          state.currentUser = saved;
+          applyUserSessionUI();
+          return;
+        }
+      } catch {}
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function handleLogin() {
+      if (state.loginRole === 'admin') {
+        const pin = document.getElementById('loginAdminPinInput').value.trim();
+        if (pin !== state.adminPin) { showToast('PIN Admin salah'); return; }
+        state.currentUser = { role: 'admin', csName: 'ADMIN' };
+      } else {
+        const csName = document.getElementById('loginCsNameInput').value.trim();
+        if (!csName) { showToast('Masukkan Nama CS terlebih dahulu'); return; }
+        state.currentUser = { role: 'cs', csName };
+      }
+      sessionStorage.setItem('sd_session', JSON.stringify(state.currentUser));
+      applyUserSessionUI();
+      renderAll();
+      showToast(`Masuk sebagai ${state.currentUser.role === 'admin' ? 'Admin' : state.currentUser.csName}`);
+    }
+
+    function applyUserSessionUI() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      const isAdmin = state.currentUser?.role === 'admin';
+      const badge = document.getElementById('userBadgePill');
+      badge.textContent = isAdmin ? 'Admin' : `CS: ${state.currentUser.csName}`;
+      badge.className = isAdmin ? 'badge badge-blue' : 'badge badge-green';
+
+      document.getElementById('adminCsFilter').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('adminPinSettingBox').style.display = isAdmin ? 'block' : 'none';
+
+      document.getElementById('accountInfoTitle').textContent = isAdmin ? 'Login sebagai Admin' : `Login sebagai CS: ${state.currentUser.csName}`;
+      document.getElementById('accountInfoSub').textContent = isAdmin
+        ? 'Akses penuh ke semua data online & kolom Nama CS.'
+        : 'Hanya menampilkan data online milik Anda.';
+    }
+
+    function logoutUser() {
+      sessionStorage.removeItem('sd_session');
+      state.currentUser = null;
+      document.getElementById('loginAdminPinInput').value = '';
+      updateCsDatalist();
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    async function saveAdminPin() {
+      const pin = document.getElementById('newAdminPinInput').value.trim();
+      if (pin.length < 4) { showToast('PIN minimal 4 karakter'); return; }
+      state.adminPin = pin;
+      await saveConfigFirebase();
+      document.getElementById('newAdminPinInput').value = '';
+      showToast('PIN Admin diperbarui di Firebase');
+    }
+
+    function getScopedDonors() {
+      if (!state.currentUser || state.currentUser.role === 'admin') return state.donors;
+      const targetCs = state.currentUser.csName.toLowerCase().trim();
+      return state.donors.filter(d => (d.cs || '').toLowerCase().trim() === targetCs);
+    }
+
+    function getScopedHistory() {
+      if (!state.currentUser || state.currentUser.role === 'admin') return state.history;
+      const scopedIds = new Set(getScopedDonors().map(d => d.id));
+      const targetCs = state.currentUser.csName.toLowerCase().trim();
+      return state.history.filter(h => scopedIds.has(h.donor_id) || (h.cs || '').toLowerCase().trim() === targetCs);
+    }
+
+    // ====== FIREBASE FIRESTORE (100% ONLINE) ======
+    function initFirebase() {
+      if (typeof firebase === 'undefined' || !navigator.onLine) {
+        setConnectionState(false, 'Offline', 'Tidak ada koneksi internet. Aplikasi memerlukan koneksi online.');
+        return;
+      }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        state.db = firebase.firestore();
+
+        window.addEventListener('offline', () => setConnectionState(false, 'Offline', 'Koneksi internet terputus.'));
+        window.addEventListener('online', () => syncFromFirebase(true));
+
+        state.db.collection('donors').onSnapshot((snap) => {
+          const cloudDonors = [];
+          snap.forEach((doc) => cloudDonors.push(doc.data()));
+          state.donors = cloudDonors;
+          setConnectionState(true, 'Online', 'Terhubung realtime ke Firebase Firestore (fudonatur).');
+          updateCsDatalist();
+          renderAll();
+        }, (err) => {
+          setConnectionState(false, 'Terputus', `Gagal akses Firestore: ${err.message}`);
+        });
+
+        state.db.collection('message_history').orderBy('sent_at', 'desc').limit(300).onSnapshot((snap) => {
+          const cloudHistory = [];
+          snap.forEach((doc) => cloudHistory.push(doc.data()));
+          state.history = cloudHistory;
+          renderHistoryTab();
+          renderDonors();
+        }, () => {});
+
+        state.db.collection('settings').doc('config').onSnapshot((doc) => {
+          if (doc.exists) {
+            const cfg = doc.data();
+            if (Array.isArray(cfg.responseOptions) && cfg.responseOptions.length) state.responseOptions = cfg.responseOptions;
+            if (Array.isArray(cfg.templates) && cfg.templates.length) state.templates = cfg.templates;
+            if (Array.isArray(cfg.files)) state.files = cfg.files;
+            if (cfg.adminPin) state.adminPin = cfg.adminPin;
+            renderSettings();
+            renderDonors();
+          }
+        }, () => {});
+      } catch (e) {
+        setConnectionState(false, 'Error', 'Gagal inisialisasi Firebase: ' + e.message);
+      }
+    }
+
+    function setConnectionState(connected, pillLabel, detailText) {
+      state.isOnlineConnected = connected;
+      document.getElementById('syncDot').className = connected ? 'dot cloud' : 'dot';
+      document.getElementById('syncLabel').textContent = pillLabel;
+      document.getElementById('firebaseStatusText').textContent = detailText;
+      document.getElementById('offlineAlert').classList.toggle('show', !connected);
+    }
+
+    function requireOnline() {
+      if (!state.db || !navigator.onLine) {
+        showToast('Gagal: membutuhkan koneksi internet online ke Firebase');
+        return false;
+      }
+      return true;
+    }
+
+    async function syncFromFirebase(notify = false) {
+      if (!requireOnline()) return;
+      try {
+        const snap = await state.db.collection('donors').get();
+        const items = [];
+        snap.forEach(d => items.push(d.data()));
+        state.donors = items;
+        setConnectionState(true, 'Online', 'Terhubung realtime ke Firebase Firestore (fudonatur).');
+        updateCsDatalist();
+        renderAll();
+        if (notify) showToast(`${items.length} data dimuat dari Firebase`);
+      } catch (err) {
+        setConnectionState(false, 'Terputus', `Gagal memuat data: ${err.message}`);
+        if (notify) showToast('Gagal terhubung ke Firestore');
+      }
+    }
+
+    async function saveDonorFirebase(donor) {
+      if (!requireOnline()) return false;
+      try {
+        await state.db.collection('donors').doc(donor.id).set(donor, { merge: true });
+        return true;
+      } catch (err) {
+        showToast('Gagal simpan ke Firebase: ' + err.message);
+        return false;
+      }
+    }
+
+    async function batchSaveDonorsFirebase(donors, replaceAll = false) {
+      if (!requireOnline()) return false;
+      try {
+        if (replaceAll) {
+          const existingSnap = await state.db.collection('donors').get();
+          const newIds = new Set(donors.map(d => d.id));
+          const toDelete = [];
+          existingSnap.forEach(doc => { if (!newIds.has(doc.id)) toDelete.push(doc.ref); });
+          for (let i = 0; i < toDelete.length; i += 400) {
+            const delBatch = state.db.batch();
+            toDelete.slice(i, i + 400).forEach(ref => delBatch.delete(ref));
+            await delBatch.commit();
+          }
+        }
+        for (let i = 0; i < donors.length; i += 400) {
+          const batch = state.db.batch();
+          donors.slice(i, i + 400).forEach(d => batch.set(state.db.collection('donors').doc(d.id), d, { merge: true }));
+          await batch.commit();
+        }
+        return true;
+      } catch (err) {
+        showToast('Gagal unggah ke Firebase: ' + err.message);
+        return false;
+      }
+    }
+
+    async function saveHistoryFirebase(entry) {
+      if (!requireOnline()) return;
+      try { await state.db.collection('message_history').doc(entry.id).set(entry); } catch {}
+    }
+
+    async function saveConfigFirebase() {
+      if (!requireOnline()) return;
+      try {
+        await state.db.collection('settings').doc('config').set({
+          responseOptions: state.responseOptions,
+          templates: state.templates,
+          files: state.files,
+          adminPin: state.adminPin
+        }, { merge: true });
+      } catch (err) {
+        showToast('Gagal simpan pengaturan ke Firebase');
+      }
+    }
+
+    // ====== NAVIGATION ======
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.querySelector(`.tab-item[data-tab="${tabName}"]`).classList.add('active');
+
+      const titles = {
+        dashboard: 'Dashboard',
+        donors: 'Data Donatur',
+        history: 'Riwayat Pesan',
+        import: 'Impor CSV',
+        settings: 'Pengaturan'
+      };
+      document.getElementById('headerTitle').textContent = titles[tabName] || 'SapaDonatur';
+      if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'donors') renderDonors();
+      if (tabName === 'history') renderHistoryTab();
+      if (tabName === 'settings') renderSettings();
+    }
+
+    // ====== HELPERS ======
+    function formatRupiah(num) { return 'Rp ' + (Number(num) || 0).toLocaleString('id-ID'); }
+
+    function normalizePhone(raw) {
+      let digits = String(raw || '').replace(/\D/g, '');
+      if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+      else if (digits.startsWith('8')) digits = '62' + digits;
+      return digits;
+    }
+
+    function parseAmount(raw) { return parseInt(String(raw || '').replace(/[^\d]/g, ''), 10) || 0; }
+
+    function parseDateISO(raw) {
+      const s = String(raw || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+      const d = new Date(s);
+      return !isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : '';
+    }
+
+    function isPaidInTargetMonth(donor) {
+      if (donor.manual_status_map && donor.manual_status_map[state.targetMonth]) {
+        return donor.manual_status_map[state.targetMonth] === 'paid';
+      }
+      if (!donor.donasi_terakhir) return false;
+      return donor.donasi_terakhir.startsWith(state.targetMonth);
+    }
+
+    function daysSince(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return '-';
+      const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+      return diff <= 0 ? 'Hari ini' : `${diff} hari lalu`;
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '-';
+      return new Date(iso).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderDonors();
+      renderHistoryTab();
+      renderSettings();
+    }
+
+    // ====== DASHBOARD ======
+    function renderDashboard() {
+      const scoped = getScopedDonors();
+      const total = scoped.length;
+      const unpaid = scoped.filter(d => !isPaidInTargetMonth(d));
+      const paid = scoped.filter(d => isPaidInTargetMonth(d));
+      const waSent = unpaid.filter(d => d.status_wa);
+
+      const unpaidTotalRp = unpaid.reduce((s, d) => s + (d.total_donasi || 0), 0);
+      const allTotalRp = scoped.reduce((s, d) => s + (d.total_donasi || 0), 0);
+
+      document.getElementById('kpiUnpaidCount').textContent = unpaid.length;
+      document.getElementById('kpiUnpaidSub').textContent = `${formatRupiah(unpaidTotalRp)} historis`;
+      document.getElementById('kpiPaidCount').textContent = paid.length;
+      document.getElementById('kpiPaidSub').textContent = total ? `${Math.round((paid.length / total) * 100)}% retensi` : 'Bulan ini';
+      document.getElementById('kpiWaCount').textContent = waSent.length;
+      document.getElementById('kpiWaSub').textContent = `Sisa ${Math.max(0, unpaid.length - waSent.length)} belum di-WA`;
+      document.getElementById('kpiTotalCount').textContent = total;
+      document.getElementById('kpiTotalAmount').textContent = formatRupiah(allTotalRp);
+
+      const pct = unpaid.length ? Math.round((waSent.length / unpaid.length) * 100) : 0;
+      document.getElementById('followupPercent').textContent = `${pct}%`;
+      document.getElementById('followupProgress').style.width = `${pct}%`;
+      document.getElementById('followupSummaryText').textContent = total
+        ? `${waSent.length} dari ${unpaid.length} donatur yang belum donasi di ${state.targetMonth} sudah dihubungi via WhatsApp.`
+        : 'Belum ada data donatur di Firebase untuk akun ini. Silakan unggah CSV.';
+
+      const high = unpaid.filter(d => d.total_donasi >= 1000000).length;
+      const mid = unpaid.filter(d => d.total_donasi >= 300000 && d.total_donasi < 1000000).length;
+      const low = unpaid.filter(d => d.total_donasi < 300000).length;
+      const maxSeg = Math.max(1, unpaid.length);
+
+      document.getElementById('segCountHigh').textContent = high;
+      document.getElementById('segBarHigh').style.width = `${(high / maxSeg) * 100}%`;
+      document.getElementById('segCountMid').textContent = mid;
+      document.getElementById('segBarMid').style.width = `${(mid / maxSeg) * 100}%`;
+      document.getElementById('segCountLow').textContent = low;
+      document.getElementById('segBarLow').style.width = `${(low / maxSeg) * 100}%`;
+    }
+
+    // ====== DONORS TAB ======
+    function setupFilters() {
+      document.querySelectorAll('#donorFilterSeg .seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#donorFilterSeg .seg-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filter = btn.dataset.filter;
+          renderDonors();
+        });
+      });
+    }
+
+    function toggleViewMode() {
+      state.viewMode = state.viewMode === 'table' ? 'card' : 'table';
+      sessionStorage.setItem('sd_view', state.viewMode);
+      updateViewModeBtn();
+      renderDonors();
+    }
+
+    function updateViewModeBtn() {
+      document.getElementById('viewModeBtn').textContent = state.viewMode === 'table' ? 'Mode: Tabel' : 'Mode: Kartu';
+    }
+
+    function getFilteredDonors() {
+      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const sortBy = document.getElementById('sortSelect').value;
+      const isAdmin = state.currentUser?.role === 'admin';
+      const csFilter = isAdmin ? document.getElementById('adminCsFilter').value : 'all';
+
+      let list = getScopedDonors().filter(d => {
+        if (isAdmin && csFilter !== 'all' && (d.cs || '') !== csFilter) return false;
+        const paid = isPaidInTargetMonth(d);
+        if (state.filter === 'unpaid' && paid) return false;
+        if (state.filter === 'pending_wa' && (paid || d.status_wa)) return false;
+        if (state.filter === 'followed_up' && !d.status_wa) return false;
+        if (state.filter === 'paid' && !paid) return false;
+
+        if (q) {
+          const m1 = (d.nama || '').toLowerCase().includes(q);
+          const m2 = (d.no_wa || '').toLowerCase().includes(q);
+          const m3 = (d.respon_donatur || '').toLowerCase().includes(q);
+          const m4 = (d.cs || '').toLowerCase().includes(q);
+          if (!m1 && !m2 && !m3 && !m4) return false;
+        }
+        return true;
+      });
+
+      list.sort((a, b) => {
+        if (sortBy === 'total_desc') return (b.total_donasi || 0) - (a.total_donasi || 0);
+        if (sortBy === 'date_asc') return (a.donasi_terakhir || '').localeCompare(b.donasi_terakhir || '');
+        if (sortBy === 'date_desc') return (b.donasi_terakhir || '').localeCompare(a.donasi_terakhir || '');
+        if (sortBy === 'name_asc') return (a.nama || '').localeCompare(b.nama || '');
+        return 0;
+      });
+      return list;
+    }
+
+    async function changeMonthStatus(donorId, val) {
+      const donor = state.donors.find(d => d.id === donorId);
+      if (!donor) return;
+      if (!donor.manual_status_map) donor.manual_status_map = {};
+      donor.manual_status_map[state.targetMonth] = val;
+      donor.updated_at = new Date().toISOString();
+      if (await saveDonorFirebase(donor)) {
+        renderAll();
+        showToast(`Status bulan ini diubah: ${val === 'paid' ? 'Sudah Donasi' : 'Belum Donasi'}`);
+      }
+    }
+
+    async function changeWaStatus(donorId, val) {
+      const donor = state.donors.find(d => d.id === donorId);
+      if (!donor) return;
+      donor.status_wa = (val === 'true');
+      donor.last_wa_at = donor.status_wa ? new Date().toISOString() : null;
+      donor.updated_at = new Date().toISOString();
+      if (await saveDonorFirebase(donor)) {
+        renderAll();
+        showToast(`Follow-up diubah: ${donor.status_wa ? 'Sudah Di-WA' : 'Belum Di-WA'}`);
+      }
+    }
+
+    async function changeDonorResponse(donorId, val) {
+      const donor = state.donors.find(d => d.id === donorId);
+      if (!donor) return;
+      donor.respon_donatur = val;
+      donor.updated_at = new Date().toISOString();
+      if (await saveDonorFirebase(donor)) {
+        showToast(`Respon ${donor.nama}: ${val}`);
+      }
+    }
+
+    function buildResponseOptionsHtml(currentVal) {
+      const opts = [...state.responseOptions];
+      if (currentVal && !opts.includes(currentVal)) opts.push(currentVal);
+      return opts.map(opt =>
+        `<option value="${escapeHtml(opt)}" ${currentVal === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`
+      ).join('');
+    }
+
+    function renderDonors() {
+      const container = document.getElementById('donorsContainer');
+      const list = getFilteredDonors();
+      const isAdmin = state.currentUser?.role === 'admin';
+
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="ios-card empty-state">
+            <div style="font-size:32px;margin-bottom:8px;">📋</div>
+            <strong>Tidak ada donatur yang sesuai</strong>
+            <p style="font-size:13px;margin:6px 0 14px;">Coba ubah filter atau impor file CSV baru ke Firebase.</p>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('import')">Buka Impor CSV</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.viewMode === 'table') {
+        const rowsHtml = list.map(d => {
+          const paid = isPaidInTargetMonth(d);
+          const phone = normalizePhone(d.no_wa);
+          const resp = d.respon_donatur || state.responseOptions[0] || 'Belum Ada Respon';
+          const msgCount = state.history.filter(h => h.donor_id === d.id).length;
+
+          return `
+            <tr>
+              ${isAdmin ? `<td><span class="badge badge-gray">${escapeHtml(d.cs || '-')}</span></td>` : ''}
+              <td>
+                <a href="https://wa.me/${phone}" target="_blank" rel="noopener noreferrer" class="donor-name-link" title="Klik untuk chat WhatsApp langsung">
+                  <span>${escapeHtml(d.nama)}</span>
+                  <span style="font-size:11px;color:var(--wa-dark);">↗</span>
+                </a>
+                <div style="font-size:11.5px;color:var(--text-tertiary);">+${escapeHtml(phone)}</div>
+              </td>
+              <td>
+                <div>${escapeHtml(d.donasi_terakhir || '-')}</div>
+                <div style="font-size:11px;color:var(--text-tertiary);">${daysSince(d.donasi_terakhir)}</div>
+              </td>
+              <td><strong>${formatRupiah(d.total_donasi)}</strong></td>
+              <td>
+                <select class="inline-select ${paid ? 'is-paid' : 'is-unpaid'}" onchange="changeMonthStatus('${escapeHtml(d.id)}', this.value)">
+                  <option value="unpaid" ${!paid ? 'selected' : ''}>Belum Donasi</option>
+                  <option value="paid" ${paid ? 'selected' : ''}>Sudah Donasi</option>
+                </select>
+              </td>
+              <td>
+                <select class="inline-select ${d.status_wa ? 'is-wa' : 'is-nowa'}" onchange="changeWaStatus('${escapeHtml(d.id)}', this.value)">
+                  <option value="false" ${!d.status_wa ? 'selected' : ''}>Belum Di-WA</option>
+                  <option value="true" ${d.status_wa ? 'selected' : ''}>Sudah Di-WA</option>
+                </select>
+              </td>
+              <td>
+                <select class="inline-select is-resp" onchange="changeDonorResponse('${escapeHtml(d.id)}', this.value)">
+                  ${buildResponseOptionsHtml(resp)}
+                </select>
+              </td>
+              <td style="white-space:nowrap;">
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-wa btn-sm" onclick="openWaModal('${escapeHtml(d.id)}')">Kirim WA</button>
+                  <button class="btn btn-soft btn-sm" onclick="openDonorHistoryModal('${escapeHtml(d.id)}')">Riwayat${msgCount ? ` (${msgCount})` : ''}</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        container.innerHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  ${isAdmin ? '<th>Nama CS</th>' : ''}
+                  <th>Nama (Klik ke WA)</th>
+                  <th>Donasi Terakhir</th>
+                  <th>Total Donasi</th>
+                  <th>Status Bulan Ini</th>
+                  <th>Follow-Up</th>
+                  <th>Respon Donatur</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `<div class="donor-list">${list.map(d => {
+          const paid = isPaidInTargetMonth(d);
+          const phone = normalizePhone(d.no_wa);
+          const resp = d.respon_donatur || state.responseOptions[0] || 'Belum Ada Respon';
+          const msgCount = state.history.filter(h => h.donor_id === d.id).length;
+
+          return `
+            <div class="donor-card">
+              <div class="donor-card-head">
+                <div>
+                  ${isAdmin ? `<div style="margin-bottom:4px;"><span class="badge badge-gray">CS: ${escapeHtml(d.cs || '-')}</span></div>` : ''}
+                  <a href="https://wa.me/${phone}" target="_blank" rel="noopener noreferrer" class="donor-name-link" style="font-size:16px;">
+                    <span>${escapeHtml(d.nama)}</span>
+                    <span style="font-size:12px;color:var(--wa-dark);">↗</span>
+                  </a>
+                  <div style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">+${escapeHtml(phone)}</div>
+                </div>
+                <strong style="font-size:14px;color:var(--primary);">${formatRupiah(d.total_donasi)}</strong>
+              </div>
+              <div class="donor-meta">
+                <span>Terakhir: <strong>${escapeHtml(d.donasi_terakhir || '-')}</strong> (${daysSince(d.donasi_terakhir)})</span>
+              </div>
+              <div class="donor-inline-controls">
+                <select class="inline-select ${paid ? 'is-paid' : 'is-unpaid'}" onchange="changeMonthStatus('${escapeHtml(d.id)}', this.value)">
+                  <option value="unpaid" ${!paid ? 'selected' : ''}>Belum Donasi</option>
+                  <option value="paid" ${paid ? 'selected' : ''}>Sudah Donasi</option>
+                </select>
+                <select class="inline-select ${d.status_wa ? 'is-wa' : 'is-nowa'}" onchange="changeWaStatus('${escapeHtml(d.id)}', this.value)">
+                  <option value="false" ${!d.status_wa ? 'selected' : ''}>Belum Di-WA</option>
+                  <option value="true" ${d.status_wa ? 'selected' : ''}>Sudah Di-WA</option>
+                </select>
+                <select class="inline-select is-resp" onchange="changeDonorResponse('${escapeHtml(d.id)}', this.value)">
+                  ${buildResponseOptionsHtml(resp)}
+                </select>
+              </div>
+              <div class="donor-actions">
+                <button class="btn btn-wa btn-sm" style="flex:1;" onclick="openWaModal('${escapeHtml(d.id)}')">Kirim Pesan &amp; File WA</button>
+                <button class="btn btn-soft btn-sm" onclick="openDonorHistoryModal('${escapeHtml(d.id)}')">Riwayat${msgCount ? ` (${msgCount})` : ''}</button>
+              </div>
+            </div>
+          `;
+        }).join('')}</div>`;
+      }
+    }
+
+    // ====== WHATSAPP MODAL & RIWAYAT ======
+    function openWaModal(donorId) {
+      const donor = state.donors.find(d => d.id === donorId);
+      if (!donor) return;
+      state.activeDonorId = donorId;
+
+      document.getElementById('waModalName').textContent = donor.nama;
+      document.getElementById('waModalPhone').textContent = `+${normalizePhone(donor.no_wa)} • Total ${formatRupiah(donor.total_donasi)}`;
+
+      document.getElementById('waTemplateSelect').innerHTML = state.templates.map(t =>
+        `<option value="${escapeHtml(t.id)}">${escapeHtml(t.title)}</option>`
+      ).join('');
+
+      const fileSelect = document.getElementById('waFileSelect');
+      fileSelect.innerHTML = `<option value="">-- Tanpa File Lampiran --</option>` +
+        state.files.map(f => `<option value="${escapeHtml(f.url)}">${escapeHtml(f.name)}</option>`).join('');
+      if (state.files.length > 0) fileSelect.value = state.files[0].url;
+      document.getElementById('waCustomLink').value = fileSelect.value;
+
+      updateWaPreview();
+      document.getElementById('waModal').classList.add('open');
+    }
+
+    function closeWaModal() {
+      document.getElementById('waModal').classList.remove('open');
+      state.activeDonorId = null;
+    }
+
+    function onWaFileChange() {
+      document.getElementById('waCustomLink').value = document.getElementById('waFileSelect').value;
+      updateWaPreview();
+    }
+
+    function updateWaPreview() {
+      const donor = state.donors.find(d => d.id === state.activeDonorId);
+      if (!donor) return;
+      const tplId = document.getElementById('waTemplateSelect').value;
+      const tpl = state.templates.find(t => t.id === tplId) || state.templates[0];
+      const fileLink = (document.getElementById('waCustomLink').value || '').trim();
+
+      let msg = tpl ? tpl.body : '';
+      msg = msg
+        .replace(/\{nama\}/gi, donor.nama || '')
+        .replace(/\{total_donasi\}/gi, formatRupiah(donor.total_donasi))
+        .replace(/\{terakhir_donasi\}/gi, donor.donasi_terakhir || '-')
+        .replace(/\{link_file\}/gi, fileLink || '(link belum diisi)');
+
+      document.getElementById('waMessageBox').value = msg;
+    }
+
+    async function sendWhatsAppNow() {
+      const donor = state.donors.find(d => d.id === state.activeDonorId);
+      if (!donor || !requireOnline()) return;
+
+      const text = document.getElementById('waMessageBox').value.trim();
+      const fileLink = (document.getElementById('waCustomLink').value || '').trim();
+      const tplSelect = document.getElementById('waTemplateSelect');
+      const tplTitle = tplSelect.options[tplSelect.selectedIndex]?.text || 'Custom';
+      const phone = normalizePhone(donor.no_wa);
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+
+      donor.status_wa = true;
+      donor.last_wa_at = new Date().toISOString();
+      donor.updated_at = donor.last_wa_at;
+
+      const histEntry = {
+        id: 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        donor_id: donor.id,
+        donor_name: donor.nama,
+        cs: donor.cs || state.currentUser?.csName || '',
+        no_wa: phone,
+        template_title: tplTitle,
+        file_link: fileLink,
+        message: text,
+        sent_at: donor.last_wa_at
+      };
+
+      await saveDonorFirebase(donor);
+      await saveHistoryFirebase(histEntry);
+
+      closeWaModal();
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      showToast('WhatsApp dibuka & pesan dicatat ke Firebase');
+    }
+
+    function openDonorHistoryModal(donorId) {
+      const donor = state.donors.find(d => d.id === donorId);
+      if (!donor) return;
+      const logs = state.history.filter(h => h.donor_id === donorId);
+      document.getElementById('dhModalTitle').textContent = `Riwayat: ${donor.nama}`;
+      document.getElementById('dhModalSub').textContent = `${logs.length} pesan tercatat`;
+
+      const content = document.getElementById('dhModalContent');
+      if (!logs.length) {
+        content.innerHTML = `<div class="empty-state" style="padding:24px 12px;">Belum ada pesan yang dikirim ke ${escapeHtml(donor.nama)}.</div>`;
+      } else {
+        content.innerHTML = logs.map(h => `
+          <div class="history-item">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);">
+              <strong>${escapeHtml(h.template_title || 'Pesan WA')}</strong>
+              <span>${formatDateTime(h.sent_at)}</span>
+            </div>
+            <div class="history-msg">${escapeHtml(h.message)}</div>
+          </div>
+        `).join('');
+      }
+      document.getElementById('donorHistoryModal').classList.add('open');
+    }
+
+    function closeDonorHistoryModal() {
+      document.getElementById('donorHistoryModal').classList.remove('open');
+    }
+
+    function renderHistoryTab() {
+      const container = document.getElementById('historyListContainer');
+      const q = (document.getElementById('historySearchInput')?.value || '').toLowerCase().trim();
+      const logs = getScopedHistory().filter(h => {
+        if (!q) return true;
+        return (h.donor_name || '').toLowerCase().includes(q) || (h.message || '').toLowerCase().includes(q);
+      });
+
+      if (!logs.length) {
+        container.innerHTML = `
+          <div class="ios-card empty-state">
+            <div style="font-size:32px;margin-bottom:8px;">💬</div>
+            <strong>Belum ada riwayat pesan</strong>
+            <p style="font-size:13px;margin-top:6px;">Setiap pesan yang Anda kirim melalui tombol <strong>Kirim WA</strong> otomatis tersimpan online di Firebase.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const isAdmin = state.currentUser?.role === 'admin';
+      container.innerHTML = logs.map(h => `
+        <div class="history-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <a href="https://wa.me/${escapeHtml(h.no_wa)}" target="_blank" rel="noopener noreferrer" class="donor-name-link">
+              <span>${escapeHtml(h.donor_name)}</span>
+              <span style="font-size:11px;color:var(--wa-dark);">↗</span>
+            </a>
+            <span style="font-size:11.5px;color:var(--text-tertiary);">${formatDateTime(h.sent_at)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            ${isAdmin && h.cs ? `CS: <strong>${escapeHtml(h.cs)}</strong> &bull; ` : ''}Template: ${escapeHtml(h.template_title || '-')}
+          </div>
+          <div class="history-msg">${escapeHtml(h.message)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ====== CSV PARSER & IMPOR ======
+    function setupDropzone() {
+      const dz = document.getElementById('dropzone');
+      dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+      dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        if (e.dataTransfer.files.length) readCsvFile(e.dataTransfer.files[0]);
+      });
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) readCsvFile(file);
+      e.target.value = '';
+    }
+
+    function readCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => parseAndPreviewCSV(ev.target.result);
+      reader.readAsText(file);
+    }
+
+    function splitCsvLine(line, delimiter) {
+      const result = [];
+      let cur = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === delimiter && !inQuotes) {
+          result.push(cur.trim()); cur = '';
+        } else cur += ch;
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    function parseAndPreviewCSV(rawText) {
+      const text = String(rawText || '').replace(/^\uFEFF/, '').trim();
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length < 2) { showToast('File CSV kosong atau tidak valid'); return; }
+
+      const firstLine = lines[0];
+      const delimiter = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+      const headers = splitCsvLine(firstLine, delimiter).map(h => h.toLowerCase().trim());
+
+      const idxCs = headers.findIndex(h => h === 'cs' || h.includes('cs') || h.includes('sales'));
+      const idxNama = headers.findIndex(h => h.includes('nama'));
+      const idxWa = headers.findIndex(h => h.includes('wa') || h.includes('hp') || h.includes('telp') || h.includes('phone'));
+      const idxDate = headers.findIndex(h => h.includes('terakhir') || h.includes('tanggal') || h.includes('date'));
+      const idxTotal = headers.findIndex(h => h.includes('total') || h.includes('nominal') || h.includes('donasi'));
+
+      if (idxNama === -1 || idxWa === -1) { showToast('Kolom "Nama" dan "No WA" wajib ada'); return; }
+
+      const fallbackCs = (state.currentUser?.role === 'cs') ? state.currentUser.csName : '';
+      const parsed = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = splitCsvLine(lines[i], delimiter);
+        const nama = (cols[idxNama] || '').trim();
+        const noWa = normalizePhone(cols[idxWa] || '');
+        if (!nama || !noWa) continue;
+        const csVal = idxCs !== -1 ? (cols[idxCs] || '').trim() : fallbackCs;
+        parsed.push({
+          id: noWa,
+          cs: csVal || fallbackCs,
+          nama,
+          no_wa: noWa,
+          donasi_terakhir: idxDate !== -1 ? parseDateISO(cols[idxDate]) : '',
+          total_donasi: idxTotal !== -1 ? parseAmount(cols[idxTotal]) : 0,
+          status_wa: false,
+          respon_donatur: state.responseOptions[0] || 'Belum Ada Respon',
+          manual_status_map: {},
+          last_wa_at: null,
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      if (!parsed.length) { showToast('Tidak ada baris valid terbaca'); return; }
+
+      state.pendingCsvRows = parsed;
+      document.getElementById('previewCount').textContent = parsed.length;
+      const sample = parsed.slice(0, 5);
+      document.getElementById('previewTable').innerHTML = `
+        <thead><tr><th>CS</th><th>Nama</th><th>No WA</th><th>Total Donasi</th><th>Donasi Terakhir</th></tr></thead>
+        <tbody>${sample.map(r => `<tr><td>${escapeHtml(r.cs || '-')}</td><td>${escapeHtml(r.nama)}</td><td>${escapeHtml(r.no_wa)}</td><td>${formatRupiah(r.total_donasi)}</td><td>${escapeHtml(r.donasi_terakhir || '-')}</td></tr>`).join('')}</tbody>
+      `;
+      document.getElementById('csvPreviewCard').style.display = 'block';
+      showToast(`${parsed.length} data CSV siap diunggah ke Firebase`);
+    }
+
+    async function confirmImportCSV() {
+      if (!state.pendingCsvRows.length || !requireOnline()) return;
+      const mode = document.getElementById('importModeSelect').value;
+
+      let targetList = [];
+      if (mode === 'replace') {
+        targetList = state.pendingCsvRows;
+      } else {
+        const map = new Map(state.donors.map(d => [d.id, d]));
+        state.pendingCsvRows.forEach(row => {
+          const ex = map.get(row.id);
+          if (ex) {
+            map.set(row.id, {
+              ...ex,
+              cs: row.cs || ex.cs,
+              nama: row.nama,
+              no_wa: row.no_wa,
+              donasi_terakhir: row.donasi_terakhir || ex.donasi_terakhir,
+              total_donasi: row.total_donasi || ex.total_donasi,
+              updated_at: new Date().toISOString()
+            });
+          } else {
+            map.set(row.id, row);
+          }
+        });
+        targetList = Array.from(map.values());
+      }
+
+      const ok = await batchSaveDonorsFirebase(targetList, mode === 'replace');
+      if (ok) {
+        state.pendingCsvRows = [];
+        document.getElementById('csvPreviewCard').style.display = 'none';
+        switchTab('donors');
+        showToast('Data CSV berhasil diunggah ke Firebase!');
+      }
+    }
+
+    function cancelImportCSV() {
+      state.pendingCsvRows = [];
+      document.getElementById('csvPreviewCard').style.display = 'none';
+    }
+
+    function loadSampleData() {
+      const cs = (state.currentUser?.role === 'cs') ? state.currentUser.csName : '1_FAUZIAH';
+      const sampleCsv = [
+        'CS,Nama,No WA,Total Donasi,Donasi terakhir',
+        `${cs},Hj. Charyati Hasni,6281285839574,18.250.000,31/10/2026`,
+        `${cs},Burhan,6281346478787,3.400.000,08/10/2026`,
+        `${cs},Sugjono,6282210370849,1.300.000,30/10/2026`,
+        `${cs},Aisyah,6289512504190,1.010.000,12/10/2026`,
+        `2_BUDI,Nanik,6281321041999,925.000,05/11/2026`,
+        `2_BUDI,Wismo Wijoyo,6281315116981,900.000,19/10/2026`
+      ].join('\n');
+      parseAndPreviewCSV(sampleCsv);
+    }
+
+    function exportCSV() {
+      const scoped = getScopedDonors();
+      if (!scoped.length) { showToast('Belum ada data untuk diekspor'); return; }
+      const header = ['CS', 'Nama', 'No WA', 'Total Donasi', 'Donasi terakhir', 'Status Bulan Ini', 'Status Follow-Up WA', 'Respon Donatur'];
+      const rows = scoped.map(d => [
+        `"${(d.cs || '').replace(/"/g, '""')}"`,
+        `"${(d.nama || '').replace(/"/g, '""')}"`,
+        d.no_wa,
+        d.total_donasi || 0,
+        d.donasi_terakhir || '',
+        isPaidInTargetMonth(d) ? 'Sudah Donasi' : 'Belum Donasi',
+        d.status_wa ? 'Sudah Di-WA' : 'Belum Di-WA',
+        `"${(d.respon_donatur || 'Belum Ada Respon').replace(/"/g, '""')}"`
+      ]);
+      const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sapadonatur-${state.targetMonth}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV berhasil diekspor');
+    }
+
+    // ====== SETTINGS ======
+    function renderSettings() {
+      document.getElementById('responseOptionsList').innerHTML = state.responseOptions.map((opt, idx) => `
+        <span class="badge badge-gray" style="padding:6px 10px;font-size:12.5px;gap:6px;">
+          <span>${escapeHtml(opt)}</span>
+          <button onclick="deleteResponseOption(${idx})" style="border:none;background:none;color:var(--red);font-weight:700;cursor:pointer;padding:0;font-size:13px;">×</button>
+        </span>
+      `).join('');
+
+      document.getElementById('fileLinksList').innerHTML = state.files.map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:10px;">
+          <div style="min-width:0;">
+            <div style="font-weight:600;font-size:13px;">${escapeHtml(f.name)}</div>
+            <div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(f.url)}</div>
+          </div>
+          <button class="btn btn-soft-red btn-sm" onclick="deleteFileLink('${escapeHtml(f.id)}')">Hapus</button>
+        </div>
+      `).join('');
+
+      document.getElementById('templatesList').innerHTML = state.templates.map(t => `
+        <div style="padding:10px;background:var(--bg);border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <strong style="font-size:13px;">${escapeHtml(t.title)}</strong>
+            <button class="btn btn-soft-red btn-sm" onclick="deleteTemplate('${escapeHtml(t.id)}')">Hapus</button>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);white-space:pre-line;">${escapeHtml(t.body)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function addResponseOption() {
+      const val = document.getElementById('newRespOptionInput').value.trim();
+      if (!val || !requireOnline()) return;
+      if (state.responseOptions.includes(val)) { showToast('Pilihan sudah ada'); return; }
+      state.responseOptions.push(val);
+      await saveConfigFirebase();
+      document.getElementById('newRespOptionInput').value = '';
+      renderSettings();
+      renderDonors();
+      showToast('Pilihan respon disimpan ke Firebase');
+    }
+
+    async function deleteResponseOption(idx) {
+      if (state.responseOptions.length <= 1) { showToast('Minimal harus ada 1 pilihan respon'); return; }
+      if (!requireOnline()) return;
+      state.responseOptions.splice(idx, 1);
+      await saveConfigFirebase();
+      renderSettings();
+      renderDonors();
+    }
+
+    async function addFileLink() {
+      const name = document.getElementById('newFileName').value.trim();
+      const url = document.getElementById('newFileUrl').value.trim();
+      if (!name || !url) { showToast('Isi nama file dan URL link-nya'); return; }
+      if (!requireOnline()) return;
+      state.files.push({ id: 'file-' + Date.now(), name, url });
+      await saveConfigFirebase();
+      document.getElementById('newFileName').value = '';
+      document.getElementById('newFileUrl').value = '';
+      renderSettings();
+      showToast('Link file disimpan ke Firebase');
+    }
+
+    async function deleteFileLink(id) {
+      if (!requireOnline()) return;
+      state.files = state.files.filter(f => f.id !== id);
+      await saveConfigFirebase();
+      renderSettings();
+    }
+
+    async function addTemplate() {
+      const title = document.getElementById('newTplTitle').value.trim();
+      const body = document.getElementById('newTplBody').value.trim();
+      if (!title || !body) { showToast('Isi judul dan isi pesan template'); return; }
+      if (!requireOnline()) return;
+      state.templates.push({ id: 'tpl-' + Date.now(), title, body });
+      await saveConfigFirebase();
+      document.getElementById('newTplTitle').value = '';
+      document.getElementById('newTplBody').value = '';
+      renderSettings();
+      showToast('Template disimpan ke Firebase');
+    }
+
+    async function deleteTemplate(id) {
+      if (state.templates.length <= 1) { showToast('Minimal harus ada 1 template'); return; }
+      if (!requireOnline()) return;
+      state.templates = state.templates.filter(t => t.id !== id);
+      await saveConfigFirebase();
+      renderSettings();
+    }
+
+    // ====== PWA INSTALL & AUTO-UPDATE ======
+    function setupInstallPrompt() {
+      if (sessionStorage.getItem('sd_install_dismissed') === '1') return;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isStandalone) return;
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        document.getElementById('installDesc').textContent = 'Ketuk ikon Share (Bagikan) lalu pilih "Add to Home Screen".';
+        document.getElementById('installActionBtn').style.display = 'none';
+        document.getElementById('installBanner').classList.add('show');
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        state.deferredPrompt = e;
+        document.getElementById('installActionBtn').style.display = 'inline-flex';
+        document.getElementById('installBanner').classList.add('show');
+      });
+
+      document.getElementById('installActionBtn').addEventListener('click', async () => {
+        if (!state.deferredPrompt) return;
+        state.deferredPrompt.prompt();
+        await state.deferredPrompt.userChoice;
+        state.deferredPrompt = null;
+        document.getElementById('installBanner').classList.remove('show');
+      });
+    }
+
+    function dismissInstallBanner() {
+      sessionStorage.setItem('sd_install_dismissed', '1');
+      document.getElementById('installBanner').classList.remove('show');
+    }
+
+    let swRegistration = null;
+    function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+        swRegistration = reg;
+        reg.update();
+      }).catch(() => {});
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && swRegistration) swRegistration.update();
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        showToast('Memperbarui ke versi terbaru...');
+        setTimeout(() => window.location.reload(), 600);
+      });
+    }
+
+    function checkForUpdates(manual = false) {
+      if (!swRegistration) { if (manual) showToast('Aplikasi sudah versi terbaru'); return; }
+      swRegistration.update().then(() => { if (manual) showToast('Memeriksa pembaruan dari GitHub...'); });
+    }
+  </script>
+</body>
+</html>
